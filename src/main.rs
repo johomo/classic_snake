@@ -1,5 +1,4 @@
 mod engine;
-
 use classic_snake::run;
 
 fn main() {

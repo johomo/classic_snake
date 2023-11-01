@@ -1,8 +1,7 @@
-use std::any::Any;
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
-
 use crate::engine::traits;
+use std::any::Any;
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 
 pub struct Entity {
     id: String,
@@ -10,7 +9,7 @@ pub struct Entity {
     components: HashMap<String, Box<dyn traits::Component>>,
 }
 impl Entity {
-    fn new(name: String) -> Entity {
+    pub fn new(name: String) -> Entity {
         Entity {
             id: String::from("1234"),
             name,
@@ -19,7 +18,7 @@ impl Entity {
     }
 }
 
-impl traits::Entity for Entity{
+impl traits::Entity for Entity {
     fn get_id(&self) -> &str {
         self.id.as_str()
     }
@@ -28,19 +27,20 @@ impl traits::Entity for Entity{
     }
     fn get_component(&self, name: &str) -> Result<&dyn traits::Component, String> {
         match self.components.get(name) {
-            Some(value) => { Ok(value.as_ref()) },
-            None => {
-                Err(format!("Entity {} does not have any component with name {}", self.id, name))
-            },
+            Some(value) => Ok(value.as_ref()),
+            None => Err(format!(
+                "Entity {} does not have any component with name {}",
+                self.id, name
+            )),
         }
     }
-
     fn get_component_mut(&mut self, name: &str) -> Result<&mut dyn traits::Component, String> {
         match self.components.get_mut(name) {
-            Some(value) => { Ok(value.as_mut()) },
-            None => {
-                Err(format!("Entity {} does not have any component with name {}", self.id, name))
-            },
+            Some(value) => Ok(value.as_mut()),
+            None => Err(format!(
+                "Entity {} does not have any component with name {}",
+                self.id, name
+            )),
         }
     }
     fn add_component(&mut self, component: Box<dyn traits::Component>) -> Result<(), String> {
@@ -55,7 +55,6 @@ impl traits::Entity for Entity{
             }
         }
     }
-
     fn remove_component(&mut self, name: &str) -> Result<(), String> {
         match self.components.entry(name.to_string()) {
             Entry::Occupied(o) => {
@@ -76,6 +75,10 @@ impl traits::Entity for Entity{
 }
 
 impl traits::AsAny for Entity {
-    fn as_any(&self) -> &dyn Any {self}
-    fn as_any_mut(&mut self) -> &mut dyn Any {self}
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
 }

@@ -1,8 +1,7 @@
 pub mod engine;
-
 use std::error;
 
-pub fn run () -> Result<(), Box<dyn error::Error>> {
+pub fn run() -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
