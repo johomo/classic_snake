@@ -36,22 +36,17 @@ impl Transform {
             rotation,
         }
     }
-
-    pub fn walk(&mut self, units: usize, direction: Rotation) {
-        match direction {
-            Rotation::North => self.position[0] += units,
-            Rotation::South => self.position[0] -= units,
-            Rotation::East => self.position[1] += units,
-            Rotation::West => self.position[1] -= units,
-        }
-        self.rotation = direction;
-    }
-
     pub fn get_position(&self) -> &[usize; 3] {
         &self.position
     }
     pub fn get_rotation(&self) -> &Rotation {
         &self.rotation
+    }
+    pub fn set_position(&mut self, position: [usize; 3]) {
+        self.position = position;
+    }
+    pub fn set_rotation(&mut self, rotation: Rotation) {
+        self.rotation = rotation;
     }
 }
 

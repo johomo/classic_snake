@@ -1,4 +1,4 @@
-use crate::engine::traits::Component;
+use crate::engine::traits::component::Component;
 
 pub trait Entity {
     fn get_id(&self) -> &str;

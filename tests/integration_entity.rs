@@ -73,14 +73,15 @@ fn add_get_mut_mutate_component() -> Result<(), String> {
 
     // Mutate component
     let transform = component.as_any_mut().downcast_mut::<Transform>().unwrap();
-    transform.walk(3, Rotation::West);
+    transform.set_position([4, 4, 6]);
+    transform.set_rotation(Rotation::West);
 
     // Get component
     let component = entity.get_component("head")?;
     let transform = component.as_any().downcast_ref::<Transform>().unwrap();
 
     // Assertion
-    let expected_position = [2, 0, 0];
+    let expected_position = [4, 4, 6];
     let actual_position = *transform.get_position();
     let expected_rotation = Rotation::West;
     let actual_rotation = transform.get_rotation();

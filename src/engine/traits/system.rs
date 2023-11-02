@@ -1,4 +1,4 @@
-use crate::engine::traits::Entity;
+use crate::engine::traits::entity::Entity;
 
 pub trait System {
     fn get_entity(&self, name: &str) -> Result<&dyn Entity, String>;

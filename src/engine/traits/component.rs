@@ -1,4 +1,4 @@
-use crate::engine::traits::AsAny;
+use crate::engine::traits::as_any::AsAny;
 
 pub trait Component: AsAny {
     fn get_id(&self) -> &str;
