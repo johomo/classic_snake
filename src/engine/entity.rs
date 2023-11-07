@@ -1,53 +1,70 @@
-use crate::engine::traits;
+use crate::engine::component::{AsAny, Component};
+use crate::engine::component::{Rotation, Transform};
+use crate::engine::system::System;
 use std::any::Any;
+use std::cell::{Ref, RefCell, RefMut};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::rc::{Rc, Weak};
 
 pub struct Entity {
     id: String,
-    name: String,
-    components: HashMap<String, Box<dyn traits::Component>>,
-}
-impl Entity {
-    pub fn new(name: String) -> Entity {
-        Entity {
-            id: String::from("1234"),
-            name,
-            components: HashMap::new(),
-        }
-    }
+    components: HashMap<String, Rc<RefCell<dyn Component>>>,
+    system: Weak<RefCell<System>>,
+    self_weak: Weak<RefCell<Self>>,
 }
 
-impl traits::Entity for Entity {
-    fn get_id(&self) -> &str {
+impl Entity {
+    pub fn new(id: String, system: Weak<RefCell<System>>) -> Rc<RefCell<Entity>> {
+        Rc::new_cyclic(|weak| {
+            let mut entity = Entity {
+                id,
+                components: HashMap::new(),
+                system,
+                self_weak: weak.clone(),
+            };
+            let transform = Transform::new(
+                String::from("transform"),
+                [0, 0, 0],
+                Rotation::North,
+                entity.self_weak.clone(),
+            );
+            entity
+                .add_component(Rc::new(RefCell::new(transform)))
+                .unwrap();
+            RefCell::new(entity)
+        })
+    }
+
+    pub fn get_id(&self) -> &str {
         self.id.as_str()
     }
-    fn get_name(&self) -> &str {
-        self.name.as_str()
-    }
-    fn get_component(&self, name: &str) -> Result<&dyn traits::Component, String> {
-        match self.components.get(name) {
-            Some(value) => Ok(value.as_ref()),
+
+    pub fn get_component(&self, id: &str) -> Result<Ref<dyn Component>, String> {
+        match self.components.get(id) {
+            Some(value) => Ok(value.borrow()),
             None => Err(format!(
-                "Entity {} does not have any component with name {}",
-                self.id, name
+                "Entity {} does not have any component with id {}",
+                self.id, id
             )),
         }
     }
-    fn get_component_mut(&mut self, name: &str) -> Result<&mut dyn traits::Component, String> {
-        match self.components.get_mut(name) {
-            Some(value) => Ok(value.as_mut()),
+
+    pub fn get_component_mut(&self, id: &str) -> Result<RefMut<dyn Component>, String> {
+        match self.components.get(id) {
+            Some(value) => Ok(value.borrow_mut()),
             None => Err(format!(
-                "Entity {} does not have any component with name {}",
-                self.id, name
+                "Entity {} does not have any component with id {}",
+                self.id, id
             )),
         }
     }
-    fn add_component(&mut self, component: Box<dyn traits::Component>) -> Result<(), String> {
-        let name = component.get_name();
-        match self.components.entry(name.to_string()) {
-            Entry::Occupied(_) => Err(
-                format!("Cannot add component with name {} into entity with name {}. A component with the same name already exists.", name, self.name)
+
+    pub fn add_component(&mut self, component: Rc<RefCell<dyn Component>>) -> Result<(), String> {
+        let id = component.borrow().get_id().to_string();
+        match self.components.entry(id) {
+            Entry::Occupied(o) => Err(
+                format!("Cannot add component with id {} into entity with id {}. A component with the same id already exists.", o.key() , self.id)
             ),
             Entry::Vacant(v) => {
                 v.insert(component);
@@ -55,26 +72,28 @@ impl traits::Entity for Entity {
             }
         }
     }
-    fn remove_component(&mut self, name: &str) -> Result<(), String> {
-        match self.components.entry(name.to_string()) {
+
+    pub fn remove_component(&mut self, id: String) -> Result<(), String> {
+        match self.components.entry(id) {
             Entry::Occupied(o) => {
                 o.remove();
                 Ok(())
             },
-            Entry::Vacant(_) => Err(
-                format!("Cannot remove component with name {} from entity with name {}. Component does not exist.", name, self.name)
+            Entry::Vacant(v) => Err(
+                format!("Cannot remove component with id {} from entity with id {}. Component does not exist.", v.key(), self.id)
             )
         }
     }
-    fn update(&mut self) {
+
+    pub fn update(&self) {
         self.components
-            .values_mut()
-            .map(|component| component.update())
+            .values()
+            .map(|component| component.borrow_mut().update())
             .last();
     }
 }
 
-impl traits::AsAny for Entity {
+impl AsAny for Entity {
     fn as_any(&self) -> &dyn Any {
         self
     }
